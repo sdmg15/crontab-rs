@@ -42,7 +42,7 @@ pub trait Validator {
                     let step_start = step_start.parse::<u8>().unwrap();
                     let _step_end = step_end.parse::<u8>().unwrap();
         
-                    if range_start > step_start {
+                    if range_start >= step_start {
                         println!("Step start is greater than range start {step_start} > {range_start}");
                         return false;
                     }
@@ -80,7 +80,7 @@ pub trait Validator {
                 true => {
                     let range_start = range_start.parse::<u8>().unwrap();
                     let range_end = range_end.parse::<u8>().unwrap();
-                    return range_start > range_end;
+                    return range_end >= range_start;
                 }
             };
         }
@@ -181,7 +181,7 @@ impl<'a> Month<'a> {
 
 impl<'a> Validator for Month<'a> {
     fn validate_range(&self, elem: &str) -> bool {
-        let allowed_str = ["*", "JAN", "FEV", "MAR", "AVR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        let allowed_str = ["*", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
         let allowed_int = 1u8..=12u8;
 
         match elem.parse::<u8>() {
@@ -313,10 +313,11 @@ impl<'a> From<&'a str> for CronEntry<'a> {
 mod tests {
 
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_validate() {
-        let expr = "10 4 10 JAN SUN";
+        let expr = "10 4 10 FEB SUN";
         let expr = expr.split(" ").collect::<Vec<&str>>();
         let r = CronEntry::build(&expr).unwrap();
 
@@ -324,8 +325,26 @@ mod tests {
         assert_eq!(r.minutes.value(), "10");
         assert_eq!(r.hour.value(), "4");
         assert_eq!(r.day_of_month.value(), "10");
-        assert_eq!(r.month.value(), "JAN");
+        assert_eq!(r.month.value(), "FEB");
         assert_eq!(r.day_of_week.value(), "SUN");
+    }
+
+    #[test]
+    fn test_parse_range() {
+        let test_cases = HashMap::from([
+            ("1-12", true),
+            ("*-*", false),
+            ("12-1", false),
+            ("12-12", true),
+            ("*-10", false),
+            ("1-10/2", true),
+        ]);
+
+        test_cases.iter()
+                  .for_each(|(case, expected)|{
+                        let min = Minutes(case);
+                        assert_eq!(min.validate(), *expected);
+                    });
     }
 
     #[test]
