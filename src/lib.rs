@@ -38,9 +38,19 @@ pub trait Validator {
             match all_range_valid {
                 false => return false,
                 true => {
-                    let range_start = range_start.parse::<u8>().unwrap();
-                    let step_start = step_start.parse::<u8>().unwrap();
-                    let _step_end = step_end.parse::<u8>().unwrap();
+                    
+                    let range_start = match range_start.parse::<u8>() {
+                        Err(_) => return true,
+                        Ok(e) => e,
+                    };
+                    let step_start = match step_start.parse::<u8>() {
+                        Err(_) => return true,
+                        Ok(e) => e,
+                    };
+                    let _step_end = match step_end.parse::<u8>() {
+                        Err(_) => return true,
+                        Ok(e) => e,
+                    };
         
                     if range_start >= step_start {
                         println!("Step start is greater than range start {step_start} > {range_start}");
@@ -78,8 +88,15 @@ pub trait Validator {
             match all_range_valid {
                 false => return false,
                 true => {
-                    let range_start = range_start.parse::<u8>().unwrap();
-                    let range_end = range_end.parse::<u8>().unwrap();
+                    let range_start = match range_start.parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return true,
+                    };
+                    let range_end = match range_end.parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return true,
+                    };
+
                     return range_end >= range_start;
                 }
             };
@@ -293,20 +310,6 @@ impl<'a> From<&'a str> for CronEntry<'a> {
         return CronEntry::default();
     }
 }
-/*
-    MINUTE(u8),
-    HOUR(u8),
-    DAY_MONTH(u8),
-    MONTH(u8),
-    DAY_WEEK(u),
-
-    What's the purpose of this library?
-    1- It takes a cron job expression validate it
-    2- It shows the details to the user when exactly its job will be run
-    3- Translates the cron expression to a human readable form
-    - Eventually when that time arrives run the user program?
-*/
-
 
 #[cfg(test)]
 
@@ -317,7 +320,7 @@ mod tests {
 
     #[test]
     fn test_validate() {
-        let expr = "10 4 10 FEB SUN";
+        let expr = "10 4 10 JAN-FEB/MAR SUN";
         let expr = expr.split(" ").collect::<Vec<&str>>();
         let r = CronEntry::build(&expr).unwrap();
 
@@ -325,7 +328,7 @@ mod tests {
         assert_eq!(r.minutes.value(), "10");
         assert_eq!(r.hour.value(), "4");
         assert_eq!(r.day_of_month.value(), "10");
-        assert_eq!(r.month.value(), "FEB");
+        assert_eq!(r.month.value(), "JAN-FEB/MAR");
         assert_eq!(r.day_of_week.value(), "SUN");
     }
 
@@ -334,10 +337,16 @@ mod tests {
         let test_cases = HashMap::from([
             ("1-12", true),
             ("*-*", false),
+            ("*", true),
             ("12-1", false),
             ("12-12", true),
             ("*-10", false),
             ("1-10/2", true),
+            ("10,11,0-12", true),
+            ("10,11,12-9", false),
+            ("10,11,9-12", true),
+            ("19,11,9-12/3", true),
+            ("19,*,9-12/3", true),
         ]);
 
         test_cases.iter()
