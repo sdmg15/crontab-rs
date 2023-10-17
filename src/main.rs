@@ -1,21 +1,41 @@
-use crontab::CronEntry;
+use crontab::{CronEntry, validate};
+use std::str::FromStr;
 use std::env;
-pub fn main() {
+
+pub fn main() -> Result<(), Box<dyn std::error::Error>>{
 
     let args = env::args().collect::<Vec<String>>();
+    let expr = &args[1];
+    let s = CronEntry::from_str(expr).unwrap_or_else(|e| {
+        println!("This error happened {}", e);
+        std::process::exit(1);
+    });
 
-    let expr = args[1].split(" ").collect::<Vec<&str>>();
-    let s = CronEntry::from("5 0 * 8 SUNDAY");
+    match validate(&s.minutes) {
+        false => println!("Invalid value provided for minutes"),
+        true => ()
+    }
 
-    println!("{:?}", s);
+    match validate(&s.hour) {
+        false => println!("Invalid value provided for hour"),
+        true => ()
+    }
 
-    let res = match CronEntry::build(&expr) {
-        Err(e) => {
-            println!("This error occurred : {}", e);
-            std::process::exit(1);
-        },
-        Ok(v) => v
-    };
+    match validate(&s.month) {
+        false => println!("Invalid value provided for month"),
+        true => ()
+    }
 
-    println!("{res:?}");
+    match validate(&s.day_of_month) {
+        false => println!("Invalid value provided for day of month"),
+        true => ()
+    }
+
+    match validate(&s.day_of_week) {
+        false => println!("Invalid value provided for day of week"),
+        true => ()
+    }
+    
+    println!("The cron expression [{}] is valid", expr);
+    Ok(())
 }
