@@ -105,13 +105,9 @@ fn parse_and_categorise<T: BuildableSegment>(expr: &str, seg: &T) -> Result<T, &
 
 pub fn categorize<T: BuildableSegment>(expr: &str, seg: &T) -> Result<Vec<T>, &'static str> {
     let mut res: Vec<T> = Vec::new();
-    if expr.contains(",") {
-        expr.split(",").for_each(|elem| {
-            res.push(parse_and_categorise(elem, seg).unwrap());
-        });
-        return Ok(res);
+    for exp in expr.split(',') {
+        res.push(parse_and_categorise(exp, seg)?);
     }
-    res.push(parse_and_categorise(expr, seg)?);
     Ok(res)
 }
 
@@ -127,7 +123,7 @@ pub struct CronEntry {
 impl FromStr for CronEntry {
     type Err = &'static str;
     fn from_str(str_value: &str) -> Result<Self, Self::Err> {
-        let elems = str_value.split(" ");
+        let elems = str_value.split_whitespace();
         let cron_entry = Self::build(elems)?;
         Ok(cron_entry)
     }
@@ -145,36 +141,36 @@ impl CronEntry {
         
         let hour = match elems.next() {
             Some(m) => {
-                let min = Hour::new();
-                categorize(m, &min)?
+                let hour = Hour::new();
+                categorize(m, &hour)?
             }
             None => return Err("Invalid or missing value provided for hour"),
         };
-        
+
         let month = match elems.next() {
             Some(m) => {
-                let min = Month::new();
-                categorize(m, &min)?
+                let month = Month::new();
+                categorize(m, &month)?
             }
             None => return Err("Invalid or missing value provided for month"),
         };
-        
+
         let day_of_week = match elems.next() {
             Some(m) => {
-                let min = DayOfWeek::new();
-                categorize(m, &min)?
+                let dow = DayOfWeek::new();
+                categorize(m, &dow)?
             }
             None => return Err("Invalid or missing value provided for day-of-week"),
         };
-        
+
         let day_of_month = match elems.next() {
             Some(m) => {
-                let min = DayOfMonth::new();
-                categorize(m, &min)?
+                let dom = DayOfMonth::new();
+                categorize(m, &dom)?
             }
             None => return Err("Invalid or missing value provided for day-of-month"),
         };
-        
+
         Ok(Self {
             minutes,
             hour,

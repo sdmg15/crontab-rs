@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter, Result};
 use std::ops::RangeInclusive;
 pub trait Segment {
     fn validate_range(&self, item: &str) -> bool;
@@ -5,11 +6,12 @@ pub trait Segment {
     fn max(&self) -> u8;
 }
 
-pub trait BuildableSegment: Segment {
+pub trait BuildableSegment: Segment + Display {
     fn new(range_start: OptStr, range_end: OptStr, step: OptStr, val: OptStr) -> Self;
 }
 
 type OptStr = Option<String>;
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct Minutes {
     pub range_start: Option<String>,
@@ -113,6 +115,7 @@ impl Segment for Minutes {
             _ => valid_range.contains(&elem.parse::<u8>().unwrap()),
         }
     }
+
     fn max(&self) -> u8 {
         59
     }
@@ -195,8 +198,8 @@ impl Segment for Month {
         const ALLOWED_INT: RangeInclusive<u8> = 1u8..=12u8;
 
         match elem.parse::<u8>() {
-            Err(_) => return ALLOWED_STR.contains(&elem),
-            Ok(v) => return ALLOWED_INT.contains(&v),
+            Err(_) =>  ALLOWED_STR.contains(&elem),
+            Ok(v) => ALLOWED_INT.contains(&v),
         }
     }
     fn max(&self) -> u8 {
@@ -210,9 +213,9 @@ impl Segment for DayOfWeek {
         const ALLOWED_INT: RangeInclusive<u8> = 0u8..=6u8;
 
         match elem.parse::<u8>() {
-            Err(_) => return ALLOWED_STR.contains(&elem),
-            Ok(v) => return ALLOWED_INT.contains(&v),
-        };
+            Err(_) => ALLOWED_STR.contains(&elem),
+            Ok(v) => ALLOWED_INT.contains(&v),
+        }
     }
 
     fn max(&self) -> u8 {
@@ -228,12 +231,62 @@ impl Segment for DayOfMonth {
         const ALLOWED_INT: RangeInclusive<u8> = 1u8..=12u8;
 
         match elem.parse::<u8>() {
-            Err(_) => return ALLOWED_STR.contains(&elem),
-            Ok(v) => return ALLOWED_INT.contains(&v),
+            Err(_) =>  ALLOWED_STR.contains(&elem),
+            Ok(v) => ALLOWED_INT.contains(&v),
         }
     }
 
     fn max(&self) -> u8 {
         12
+    }
+}
+
+// Display implementation
+
+impl Display for Minutes {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        if let Some(r) = &self.val {
+            if r == "*" {
+                return write!(f, "At every minute");
+            }
+            return write!(f, "At minute {r}");
+        }
+
+        let mut s = String::new();
+        if let Some(r) = &self.range_start {
+            s = format!("from {r} through {}", self.range_end.as_ref().unwrap());
+        }
+
+        if let Some(r) = &self.step {
+            s = format!("At every {r} minute {}", s);
+        } else {
+            s = format!("At every minute {} ", s);
+        }
+
+        write!(f, "{s}")
+    }
+}
+
+impl Display for Hour {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "hour")
+    }
+}
+
+impl Display for Month {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        todo!()
+    }
+}
+
+impl Display for DayOfMonth {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "DOM")
+    }
+}
+
+impl Display for DayOfWeek {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "DOW")
     }
 }
