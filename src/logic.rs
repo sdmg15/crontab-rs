@@ -147,6 +147,14 @@ impl CronEntry {
             None => return Err(InvalidRangeValue),
         };
 
+        let day_of_month = match elems.next() {
+            Some(m) => {
+                let dom = DayOfMonth::default();
+                categorize(m, &dom)?
+            }
+            None => return Err(InvalidRangeValue),
+        };
+
         let month = match elems.next() {
             Some(m) => {
                 let month = Month::default();
@@ -159,14 +167,6 @@ impl CronEntry {
             Some(m) => {
                 let dow = DayOfWeek::default();
                 categorize(m, &dow)?
-            }
-            None => return Err(InvalidRangeValue),
-        };
-
-        let day_of_month = match elems.next() {
-            Some(m) => {
-                let dom = DayOfMonth::default();
-                categorize(m, &dom)?
             }
             None => return Err(InvalidRangeValue),
         };
@@ -189,7 +189,40 @@ impl Display for CronEntry {
             .map(|m| format!("{}", m).to_string())
             .collect::<Vec<String>>()
             .join(" and ");
-        println!("{min:?}");
-        write!(f, "{min:?}")
-    }
+
+        let hour = self
+            .hour
+            .iter()
+            .map(|m| format!("{}", m).to_string())
+            .collect::<Vec<String>>()
+            .join(" and ");
+
+        let dom: String = self
+                .day_of_month
+                .iter()
+                .map(|m| format!("{}", m).to_string())
+                .collect::<Vec<String>>()
+                .join(" and ");
+
+        let month = self
+                .month
+                .iter()
+                .map(|m| format!("{}", m).to_string())
+                .collect::<Vec<String>>()
+                .join(" and ");
+
+        let dow = self
+                .day_of_week
+                .iter()
+                .map(|m| format!("{}", m).to_string())
+                .collect::<Vec<String>>()
+                .join(" and ");
+        
+        if dow.is_empty() {
+            return write!(f, "{min} {hour} {dom} {month}")
+        }
+
+        write!(f, "{min} {hour} {dom} {dow} {month}")
+
+    } 
 }

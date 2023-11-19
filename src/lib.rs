@@ -14,7 +14,15 @@ mod tests {
     #[test]
 
     fn test_to_string() {
-        let _cases = HashMap::from([("* * * * *", "At every minute")]);
+        let _cases = HashMap::from(
+            [
+                ("* * * * *", "At every minute"),
+                ("* 1,2-3/1 * * *", "At every minute past hour 1 and Past every 1 hour from 2 through 3"),
+                ("* * 1-3/2,2,1 * *", "At every minute  on every 2 day-of-month from 1 through 3 and On day-of-month 2 and On day-of-month 1"),
+                ("* * 2,3 1-2/3,2,3 *", "At every minute  On day-of-month 2 and On day-of-month 3 in every 3 month from 1 through 2 and in month 2 and in month 3"),
+                ("* * 2,3 1-2/3,2,3 1-2/2", "“At every minute on day-of-month 2 and 3 and on every 2nd day-of-week from Monday through Tuesday in every 3rd month from January through February, February, and March.")
+            ]
+        );
     }
 
     #[test]
@@ -73,9 +81,9 @@ mod tests {
 
     #[test]
     fn test_str_representation() {
-        let expr = "10,3-10 * * * *";
+        let expr = "* * 2,3 1-2/3,2,3 1-2/2";
         let r = CronEntry::from_str(expr).unwrap();
         println!("Cron entry {}", r);
-        assert_eq!(true, false)
+        assert_eq!(true, false)         
     }
 }

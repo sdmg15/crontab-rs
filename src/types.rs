@@ -102,7 +102,7 @@ impl Display for Minutes {
         if let Some(r) = &self.step {
             s = format!("At every {r} minute {}", s);
         } else {
-            s = format!("At every minute {} ", s);
+            s = format!("At every minute {}", s);
         }
         write!(f, "{s}")
     }
@@ -124,7 +124,23 @@ impl Segment for Hour {
 
 impl Display for Hour {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+        if let Some(r) = &self.val {
+            if r == "*" {
+                return write!(f, "")
+            }
+            return write!(f, "past hour {r}")
+        }
+
+        let mut s = String::new();
+        if let Some(r) = &self.range_start {
+            s = format!("past every hour from {r} through {}", self.range_end.as_ref().unwrap());
+        }
+
+        if let Some(r) = &self.step {
+            s = format!("Past every {r} hour {}", &s[16..]);
+        }
+
+        write!(f, "{s}")
     }
 }
 
@@ -148,9 +164,26 @@ impl Segment for Month {
 
 impl Display for Month {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+        if let Some(r) = &self.val {
+            if r == "*" {
+                return write!(f, "")
+            }
+            return write!(f, "in month {r}")
+        }
+
+        let mut s = String::new();
+        if let Some(r) = &self.range_start {
+            s = format!("in every month from {r} through {}", self.range_end.as_ref().unwrap());
+        }
+
+        if let Some(r) = &self.step {
+            s = format!("in every {r} month {}", &s[15..]);
+        }
+
+        write!(f, "{s}")
     }
 }
+
 impl Segment for DayOfWeek {
     fn validate_range(&self, elem: &str) -> bool {
         const ALLOWED_STR: [&str; 8] = ["*", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
@@ -169,7 +202,23 @@ impl Segment for DayOfWeek {
 
 impl Display for DayOfWeek {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+        if let Some(r) = &self.val {
+            if r == "*" {
+                return write!(f, "")
+            }
+            return write!(f, "on {r}")
+        }
+
+        let mut s = String::new();
+        if let Some(r) = &self.range_start {
+            s = format!("on every day-of-week from {r} through {}", self.range_end.as_ref().unwrap());
+        }
+
+        if let Some(r) = &self.step {
+            s = format!("on every {r} {}", &s[9..]);
+        }
+
+        write!(f, "{s}")
     }
 }
 
@@ -193,7 +242,23 @@ impl Segment for DayOfMonth {
 
 impl Display for DayOfMonth {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        if let Some(r) = &self.val {
+            if r == "*" {
+                return write!(f, "")
+            }
+            return write!(f, "On day-of-month {r}")
+        }
+
+        let mut s = String::new();
+        if let Some(r) = &self.range_start {
+            s = format!("on every day-of-month from {r} through {}", self.range_end.as_ref().unwrap());
+        }
+
+        if let Some(r) = &self.step {
+            s = format!("on every {r} day-of-month {}", &s[22..]);
+        }
+
+        write!(f, "{s}")
     }
 }
 
