@@ -1,111 +1,75 @@
-use std::fmt::{Display, Formatter, Result};
+use core::fmt;
+use std::fmt::Display;
+use std::marker::PhantomData;
 use std::ops::RangeInclusive;
-pub trait Segment {
+pub trait Segment: BuildableSegment + Display {
     fn validate_range(&self, item: &str) -> bool;
-    // fn value(&self) -> &String;
     fn max(&self) -> u8;
 }
 
-pub trait BuildableSegment: Segment + Display {
-    fn new(range_start: OptStr, range_end: OptStr, step: OptStr, val: OptStr) -> Self;
+pub trait BuildableSegment {
+    fn new(
+        range_start: Option<String>,
+        range_end: Option<String>,
+        step: Option<String>,
+        val: Option<String>,
+    ) -> Self;
 }
 
-type OptStr = Option<String>;
-
 #[derive(Debug, PartialEq, Eq)]
-pub struct Minutes {
+pub struct Common<T> {
     pub range_start: Option<String>,
     pub range_end: Option<String>,
     pub step: Option<String>,
     pub val: Option<String>,
+    seg_type: std::marker::PhantomData<T>,
+}
+
+
+impl<T> BuildableSegment for Common<T> {
+    fn new(
+        range_start: Option<String>,
+        range_end: Option<String>,
+        step: Option<String>,
+        val: Option<String>,
+    ) -> Self {
+        Self {
+            range_start,
+            range_end,
+            step,
+            val,
+            seg_type: PhantomData,
+        }
+    }
+}
+impl<T> Default for Common<T> {
+    fn default() -> Self {
+        Self {
+            range_start: None,
+            range_end: None,
+            step: None,
+            val: None,
+            seg_type: PhantomData,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Hour {
-    pub range_start: Option<String>,
-    pub range_end: Option<String>,
-    pub step: Option<String>,
-    pub val: Option<String>,
-}
+pub struct MinuteType;
+pub type Minutes = Common<MinuteType>;
+#[derive(Debug, PartialEq, Eq)]
+pub struct HourType;
+pub type Hour = Common<HourType>;
+#[derive(Debug, PartialEq, Eq)]
+pub struct DayOfMonthType;
+pub type DayOfMonth = Common<DayOfMonthType>;
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct DayOfWeek {
-    pub range_start: Option<String>,
-    pub range_end: Option<String>,
-    pub step: Option<String>,
-    pub val: Option<String>,
-}
-
+pub struct DayOfWeekType;
+pub type DayOfWeek = Common<DayOfWeekType>;
 #[derive(Debug, PartialEq, Eq)]
-pub struct Month {
-    pub range_start: Option<String>,
-    pub range_end: Option<String>,
-    pub step: Option<String>,
-    pub val: Option<String>,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct DayOfMonth {
-    pub range_start: OptStr,
-    pub range_end: OptStr,
-    pub step: OptStr,
-    pub val: OptStr,
-}
-
-impl Month {
-    pub fn new() -> Self {
-        Self {
-            range_start: None,
-            range_end: None,
-            step: None,
-            val: None,
-        }
-    }
-}
-
-impl Minutes {
-    pub fn new() -> Self {
-        Self {
-            range_start: None,
-            range_end: None,
-            step: None,
-            val: None,
-        }
-    }
-}
-
-impl Hour {
-    pub fn new() -> Self {
-        Self {
-            range_start: None,
-            range_end: None,
-            step: None,
-            val: None,
-        }
-    }
-}
-
-impl DayOfWeek {
-    pub fn new() -> Self {
-        Self {
-            range_start: None,
-            range_end: None,
-            step: None,
-            val: None,
-        }
-    }
-}
-
-impl DayOfMonth {
-    pub fn new() -> Self {
-        Self {
-            range_start: None,
-            range_end: None,
-            step: None,
-            val: None,
-        }
-    }
-}
+pub struct MonthType;
+pub type Month = Common<MonthType>;
 
 impl Segment for Minutes {
     fn validate_range(&self, elem: &str) -> bool {
@@ -121,58 +85,26 @@ impl Segment for Minutes {
     }
 }
 
-impl BuildableSegment for Minutes {
-    fn new(range_start: OptStr, range_end: OptStr, step: OptStr, val: OptStr) -> Minutes {
-        Minutes {
-            range_start,
-            range_end,
-            step,
-            val,
-        }
-    }
-}
+impl Display for Minutes { 
 
-impl BuildableSegment for Hour {
-    fn new(range_start: OptStr, range_end: OptStr, step: OptStr, val: OptStr) -> Hour {
-        Hour {
-            range_start,
-            range_end,
-            step,
-            val,
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(r) = &self.val {
+            if r == "*" {
+                return write!(f, "At every minute")
+            }
+            return write!(f, "At minute {r}")
         }
-    }
-}
 
-impl BuildableSegment for Month {
-    fn new(range_start: OptStr, range_end: OptStr, step: OptStr, val: OptStr) -> Month {
-        Month {
-            range_start,
-            range_end,
-            step,
-            val,
+        let mut s = String::new();
+        if let Some(r) = &self.range_start {
+            s = format!("from {r} through {}", self.range_end.as_ref().unwrap());
         }
-    }
-}
-
-impl BuildableSegment for DayOfWeek {
-    fn new(range_start: OptStr, range_end: OptStr, step: OptStr, val: OptStr) -> DayOfWeek {
-        DayOfWeek {
-            range_start,
-            range_end,
-            step,
-            val,
+        if let Some(r) = &self.step {
+            s = format!("At every {r} minute {}", s);
+        } else {
+            s = format!("At every minute {} ", s);
         }
-    }
-}
-
-impl BuildableSegment for DayOfMonth {
-    fn new(range_start: OptStr, range_end: OptStr, step: OptStr, val: OptStr) -> DayOfMonth {
-        DayOfMonth {
-            range_start,
-            range_end,
-            step,
-            val,
-        }
+        write!(f, "{s}")
     }
 }
 
@@ -190,6 +122,12 @@ impl Segment for Hour {
     }
 }
 
+impl Display for Hour {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
+}
+
 impl Segment for Month {
     fn validate_range(&self, elem: &str) -> bool {
         const ALLOWED_STR: [&str; 13] = [
@@ -198,15 +136,21 @@ impl Segment for Month {
         const ALLOWED_INT: RangeInclusive<u8> = 1u8..=12u8;
 
         match elem.parse::<u8>() {
-            Err(_) =>  ALLOWED_STR.contains(&elem),
+            Err(_) => ALLOWED_STR.contains(&elem),
             Ok(v) => ALLOWED_INT.contains(&v),
         }
     }
+
     fn max(&self) -> u8 {
         12
     }
 }
 
+impl Display for Month {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
+}
 impl Segment for DayOfWeek {
     fn validate_range(&self, elem: &str) -> bool {
         const ALLOWED_STR: [&str; 8] = ["*", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
@@ -223,6 +167,12 @@ impl Segment for DayOfWeek {
     }
 }
 
+impl Display for DayOfWeek {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
+}
+
 impl Segment for DayOfMonth {
     fn validate_range(&self, elem: &str) -> bool {
         const ALLOWED_STR: [&str; 13] = [
@@ -231,7 +181,7 @@ impl Segment for DayOfMonth {
         const ALLOWED_INT: RangeInclusive<u8> = 1u8..=12u8;
 
         match elem.parse::<u8>() {
-            Err(_) =>  ALLOWED_STR.contains(&elem),
+            Err(_) => ALLOWED_STR.contains(&elem),
             Ok(v) => ALLOWED_INT.contains(&v),
         }
     }
@@ -241,52 +191,10 @@ impl Segment for DayOfMonth {
     }
 }
 
-// Display implementation
-
-impl Display for Minutes {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        if let Some(r) = &self.val {
-            if r == "*" {
-                return write!(f, "At every minute");
-            }
-            return write!(f, "At minute {r}");
-        }
-
-        let mut s = String::new();
-        if let Some(r) = &self.range_start {
-            s = format!("from {r} through {}", self.range_end.as_ref().unwrap());
-        }
-
-        if let Some(r) = &self.step {
-            s = format!("At every {r} minute {}", s);
-        } else {
-            s = format!("At every minute {} ", s);
-        }
-
-        write!(f, "{s}")
-    }
-}
-
-impl Display for Hour {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "hour")
-    }
-}
-
-impl Display for Month {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+impl Display for DayOfMonth {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
     }
 }
 
-impl Display for DayOfMonth {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "DOM")
-    }
-}
-
-impl Display for DayOfWeek {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "DOW")
-    }
-}
+ 

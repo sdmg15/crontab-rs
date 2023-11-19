@@ -1,5 +1,5 @@
-mod types;
 mod logic;
+mod types;
 
 use logic::CronEntry;
 use std::env;
