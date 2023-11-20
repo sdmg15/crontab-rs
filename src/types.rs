@@ -137,7 +137,7 @@ impl Display for Hour {
         }
 
         if let Some(r) = &self.step {
-            s = format!("Past every {r} hour {}", &s[16..]);
+            s = format!("past every {r} hour {}", &s[16..]);
         }
 
         write!(f, "{s}")
@@ -224,14 +224,10 @@ impl Display for DayOfWeek {
 
 impl Segment for DayOfMonth {
     fn validate_range(&self, elem: &str) -> bool {
-        const ALLOWED_STR: [&str; 13] = [
-            "*", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
-        ];
-        const ALLOWED_INT: RangeInclusive<u8> = 1u8..=12u8;
-
-        match elem.parse::<u8>() {
-            Err(_) => ALLOWED_STR.contains(&elem),
-            Ok(v) => ALLOWED_INT.contains(&v),
+        const ALLOWED_INT: RangeInclusive<u8> = 1u8..=31u8;
+        match elem {
+            "*" => true,
+            _ => ALLOWED_INT.contains(&elem.parse::<u8>().unwrap()),
         }
     }
 

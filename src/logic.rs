@@ -1,4 +1,5 @@
 use crate::types::*;
+use std::ops::Sub;
 use std::{num::ParseIntError, str::FromStr};
 use std::fmt::{Debug, Display, Formatter};
 
@@ -183,41 +184,34 @@ impl CronEntry {
 
 impl Display for CronEntry {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        let min = self
-            .minutes
-            .iter()
-            .map(|m| format!("{}", m).to_string())
+
+        fn to_str<T>(e: &Vec<Common<T>>) -> String where Common<T>: Display {
+            e.iter()
+            .enumerate()
+            .map(|p| { 
+                let s = format!("{}", p.1).to_string();
+                if e.len() > 1 {
+                    if p.0 == e.len().sub(1) {
+                        return format!("and {}", s.to_lowercase())
+                    }
+                    if p.0 == 0 {
+                        return format!("{}, ", p.1)
+                    } else {
+                        return format!("{}, ", s.to_lowercase())
+                    }
+                }
+                format!("{}", p.1)
+            })
             .collect::<Vec<String>>()
-            .join(" and ");
+            .join("")
+        }
 
-        let hour = self
-            .hour
-            .iter()
-            .map(|m| format!("{}", m).to_string())
-            .collect::<Vec<String>>()
-            .join(" and ");
+        let min = to_str(&self.minutes);
+        let hour = to_str(&self.hour);
+        let dom: String = to_str(&self.day_of_month);
+        let month = to_str(&self.month);
+        let dow = to_str(&self.day_of_week);
 
-        let dom: String = self
-                .day_of_month
-                .iter()
-                .map(|m| format!("{}", m).to_string())
-                .collect::<Vec<String>>()
-                .join(" and ");
-
-        let month = self
-                .month
-                .iter()
-                .map(|m| format!("{}", m).to_string())
-                .collect::<Vec<String>>()
-                .join(" and ");
-
-        let dow = self
-                .day_of_week
-                .iter()
-                .map(|m| format!("{}", m).to_string())
-                .collect::<Vec<String>>()
-                .join(" and ");
-        
         if dow.is_empty() {
             return write!(f, "{min} {hour} {dom} {month}")
         }
