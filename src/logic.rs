@@ -1,8 +1,7 @@
 use crate::types::*;
+use std::fmt::{Debug, Display, Formatter};
 use std::ops::Sub;
 use std::{num::ParseIntError, str::FromStr};
-use std::fmt::{Debug, Display, Formatter};
-
 
 use ParseError::*;
 
@@ -101,10 +100,7 @@ fn parse_and_categorise<T: Segment>(expr: &str, seg: &T) -> Result<T, ParseError
     Ok(T::new(None, None, None, Some(expr.to_string())))
 }
 
-pub fn categorize<T: Segment>(
-    expr: &str,
-    seg: &T,
-) -> Result<Vec<T>, ParseError> {
+pub fn categorize<T: Segment>(expr: &str, seg: &T) -> Result<Vec<T>, ParseError> {
     let mut res: Vec<T> = Vec::new();
     for exp in expr.split(',') {
         res.push(parse_and_categorise(exp, seg)?);
@@ -184,26 +180,28 @@ impl CronEntry {
 
 impl Display for CronEntry {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-
-        fn to_str<T>(e: &Vec<Common<T>>) -> String where Common<T>: Display {
+        fn to_str<T>(e: &Vec<Common<T>>) -> String
+        where
+            Common<T>: Display,
+        {
             e.iter()
-            .enumerate()
-            .map(|p| { 
-                let s = format!("{}", p.1).to_string();
-                if e.len() > 1 {
-                    if p.0 == e.len().sub(1) {
-                        return format!("and {}", s.to_lowercase())
+                .enumerate()
+                .map(|p| {
+                    let s = format!("{}", p.1).to_string();
+                    if e.len() > 1 {
+                        if p.0 == e.len().sub(1) {
+                            return format!("and {}", s.to_lowercase());
+                        }
+                        if p.0 == 0 {
+                            return format!("{}, ", p.1);
+                        } else {
+                            return format!("{}, ", s.to_lowercase());
+                        }
                     }
-                    if p.0 == 0 {
-                        return format!("{}, ", p.1)
-                    } else {
-                        return format!("{}, ", s.to_lowercase())
-                    }
-                }
-                format!("{}", p.1)
-            })
-            .collect::<Vec<String>>()
-            .join("")
+                    format!("{}", p.1)
+                })
+                .collect::<Vec<String>>()
+                .join("")
         }
 
         let min = to_str(&self.minutes);
@@ -213,10 +211,9 @@ impl Display for CronEntry {
         let dow = to_str(&self.day_of_week);
 
         if dow.is_empty() {
-            return write!(f, "{min} {hour} {dom} {month}")
+            return write!(f, "{min} {hour} {dom} {month}");
         }
 
         write!(f, "{min} {hour} {dom} {dow} {month}")
-
-    } 
+    }
 }
