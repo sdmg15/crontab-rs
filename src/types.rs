@@ -136,10 +136,14 @@ impl Display for Hour {
 
         let mut s = String::new();
         if let Some(r) = &self.range_start {
-            s = format!(
-                "past every hour from {r} through {}",
-                self.range_end.as_ref().unwrap()
-            );
+            if r != "*" {
+                s = format!(
+                    "past every hour from {r} through {}",
+                    self.range_end.as_ref().unwrap()
+                );
+            } else {
+                s = " ".repeat(15);
+            }
         }
 
         if let Some(r) = &self.step {
@@ -183,10 +187,14 @@ impl Display for Month {
 
         let mut s = String::new();
         if let Some(r) = &self.range_start {
-            s = format!(
-                "in every month from {r} through {}",
-                self.range_end.as_ref().unwrap()
-            );
+            if r != "*" {
+                s = format!(
+                    "in every month from {r} through {}",
+                    self.range_end.as_ref().unwrap()
+                );
+            } else {
+                s = " ".repeat(15);
+            }
         }
 
         if let Some(r) = &self.step {
