@@ -10,12 +10,13 @@ mod tests {
     use std::collections::HashMap;
     use std::str::FromStr;
     use types::*;
-
     #[test]
 
     fn test_to_string() {
         let _cases = HashMap::from(
             [
+                ("23 0-20/2 * * *", "At minute 23 Past every 2 hour from 0 through 20"),
+                ("0 0,12 1 */2 *", "At minute 0 past hour 0 and 12 on day-of-month 1 in every 2nd month"),
                 ("* * * * *", "At every minute"),
                 ("* 1,2-3/1 * * *", "At every minute past hour 1 and Past every 1 hour from 2 through 3"),
                 ("* * 1-3/2,2,1 * *", "At every minute  on every 2 day-of-month from 1 through 3 and On day-of-month 2 and On day-of-month 1"),
@@ -81,9 +82,9 @@ mod tests {
 
     #[test]
     fn test_str_representation() {
-        let expr = "* * 2,3 1-2/3,2,3 1-2/2";
+        let expr = "* 1,2-3/1 * * *";
         let r = CronEntry::from_str(expr).unwrap();
         println!("Cron entry {}", r);
-        assert_eq!(true, false)         
+        assert_eq!(true, false)
     }
 }
