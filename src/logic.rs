@@ -194,9 +194,8 @@ impl Display for CronEntry {
                         }
                         if p.0 == 0 {
                             return format!("{}, ", p.1);
-                        } else {
-                            return format!("{}, ", s.to_lowercase());
                         }
+                        return format!("{}, ", s.to_lowercase());
                     }
                     format!("{}", p.1)
                 })
